@@ -97,6 +97,9 @@ int n_fil1, n_col;		/* dimensions del camp de joc */
 char tauler[70];		/* nom del fitxer amb el laberint de joc */
 char c_req;			    /* caracter de pared del laberint */
 
+objecte mc;      		/* informacio del menjacocos */
+objecte f1;			    /* informacio del fantasma 1 */
+
 int df[] = {-1, 0, 1, 0};	/* moviments de les 4 direccions possibles */
 int dc[] = {0, -1, 0, 1};	/* dalt, esquerra, baix, dreta */
 
@@ -110,7 +113,7 @@ LA LISTA RESERVARA MEMORIA PARA COMO MAXIMO 10 ELEMENTOS DE LOS CUALES SIMEPRE E
 objecte elementos[MAX_ELEMENTOS];
 
 /*
-AHORA VAMOS A DEFINIR LOS PROCESOS AL IGUAL QUE LOS ELEMENTOS
+AHORA VAMOS A DEFINIR LOS THREADS AL IGUAL QUE LOS ELEMENTOS
 */
 pid_t tpid[MAX_ELEMENTOS];		/* taula d'identificadors dels processos fill */
 
@@ -118,14 +121,12 @@ pid_t tpid[MAX_ELEMENTOS];		/* taula d'identificadors dels processos fill */
 A CONTINUACION VAMOS A DEFINIR UNA VARIABLE GLOBAL QUE NOS SERVIRA PARA LO SIGUIENTE:
 1) SERVIRA PARA SABER EL INDICE DEL COMECOCOS EN LAS ANTERIORES ESTRUCTURAS
 2) PODER RECORRER LAS ESTRUCTURAS PARA INICIARLAS O USARLAS
-
 ESTA SE INICIA A 0 POR DARLE UN VALOR CUALQUIERA YA QUE NADA MÁS EMPEZAR EL PROGRAMA SE CAMBIARA
 */
 int totalElem = 0;
 
 /*
 LA SIGUIENTE VARIABLE NOS SERVIRA PARA DEFINIR SI SE ACABO EL JUEGO O NO Y PUEDE TENER 3 ESTADOS:
-
 0 --> COMECOCOS GANAS
 1 --> FANTASMAS GANAN
 2 --> JUGADOR APRIETA RETURN
@@ -352,6 +353,8 @@ int main(int n_args, const char *ll_args[])
   int i = 0;
   srand(getpid());		/* inicialitza numeros aleatoris */
   int *p_sharedMemory, id_sharedMemory;
+  char object_str[100];
+  char idSM_str[4];
   if ((n_args != 2) && (n_args !=3))
   {	
     fprintf(stderr,"Comanda: cocos0 fit_param [retard] [numero fantasmas]\n");
@@ -365,9 +368,11 @@ int main(int n_args, const char *ll_args[])
   p_sharedMemory = map_mem(id_sharedMemory);	/* obtenir adres. de mem. compartida */
   *p_sharedMemory = condicion;
 
-
+  /*
+  CARGA DE PARAMETROS
+  */
   carrega_parametres(ll_args[1]);
-  printf("El numero total de elementos sera de %d\n -Fantasmas: %d\n -Comecocos: 1\n", totalElem, totalElem-1);
+  printf("El numero total de elementos[indice] sera de %d\n -Fantasmas: %d\n -Comecocos: 1\n", totalElem, totalElem-1);
 
   if (n_args == 3) retard = atoi(ll_args[2]);
   else retard = 100;
@@ -378,12 +383,28 @@ int main(int n_args, const char *ll_args[])
     inicialitza_joc();
 
     /*
-    JUSTO CUANDO SE INICIA EL JUEGO Y LOS ELEMENTOS ESTAN SOBRE EL TABLERO, SE INICIAN LOS THREADS PARA QUE COMIENCEN A EJECUTARSE 
+    JUSTO CUANDO SE INICIA EL JUEGO Y LOS elementos[indice] ESTAN SOBRE EL TABLERO, SE INICIAN LOS THREADS PARA QUE COMIENCEN A EJECUTARSE 
     */
-   printf("Hay %d elementos\n", totalElem);
+   printf("Hay %d elementos[indice]\n", totalElem);
+   sprintf(idSM_str, "%i", id_sharedMemory);
+   i=1;
    while(i<totalElem)
    {
-
+    tpid[i] = fork();		/* crea un nou proces */
+    if (tpid[i] == (pid_t) 0)		/* branca del fill */
+    {
+      sprintf(object_str, "%d,%d,%d,%.2f,%c", elementos[i].f, elementos[i].c, elementos[i].d, elementos[i].r, elementos[i].a);
+      /*
+      PARAMETROS A ENVIAR
+      PARAM0 --> Nombre del programa
+      PARAM1 --> Objecto fantasma
+      PARAM2 --> Retardo
+      PARAM3 --> Id de la memoria comaprtida
+      */
+      execlp("./Fantasmas3", "Fantasmas3", object_str, ll_args[2], idSM_str, (char *)0);
+      fprintf(stderr,"error: no puc executar el process fill \'mp_car\'\n");
+      exit(0);
+    }
     i++;
    }
   /*
@@ -392,18 +413,7 @@ int main(int n_args, const char *ll_args[])
   i=1;
   while(i<totalElem)
   {
-    tpid[i] = fork();		/* crea un nou proces */
-    if (tpid[i] == (pid_t) 0)		/* branca del fill */
-	  {
-	    sprintf(a1,"%i",(i+1));
-        //Se intercambian los procesos
-        //./mp_car será el nuevo proceso para el duplicado
-        //(char *)0 --> centinela para indicar el final de paso de parametros
-	    execlp("./Fantasmas3", "Fantasmas3", elementos[i], retard (char *)0);
-	    fprintf(stderr,"error: no puc executar el process fill \'mp_car\'\n");
-	    exit(0);
-	}
-
+    waitpid(tpid[i],NULL,0);	/* espera finalitzacio d'un fill */
     i++;
   }
 
@@ -411,13 +421,13 @@ int main(int n_args, const char *ll_args[])
 
   win_fi();
 
-  if (condicion == 0)
+  if (*p_sharedMemory == 0)
   {
     printf("EL JUGADOR GANO");
-  }else if (condicion == 1)
+  }else if (*p_sharedMemory == 1)
   {
     printf("VAYA LOS FANTASMAS GANARON");
-  }else if (condicion == 2)
+  }else if (*p_sharedMemory == 2)
   {
     printf("EL JUGADOR DETUVO EL JUEGO");
   }

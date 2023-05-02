@@ -33,13 +33,27 @@ int retard;		    /* valor del retard de moviment, en mil.lisegons */
 /* captura al menjacocos, 0 altrament					*/
 int main(int n_args, char *ll_args[])
 {
-  objecte elementos;
+  objecte elementos[indice];
   objecte seg;
   int k, vk, nd, vd[3];
-  int indice = (intptr_t) index;
+  int *p_sharedMemory, id_sharedMemory;
+
+  /*
+  SE CONECTA A LA MEMORIA COMPARTIDA Y COMPRUEBA SI ES CORRECTA
+  */
+  id_sharedMemory = atoi(ll_args[3]);
+  *p_sharedMemory = map_mem(id_sharedMemory);	/* obtenir adres. de mem. compartida */
+  if (p_sharedMemory == (int*) -1)
+  {   fprintf(stderr,"proces (%d): error en identificador de memoria\n",(int)getpid());
+	exit(0);
+  }
   
+  /*
+  RECUPERAMOS EL OBJETO
+  */
+  sscanf(ll_args[1], "%d,%d,%d,%f,%c", &elementos[indice].f, &elementos[indice].c, &elementos[indice].d, &elementos[indice].r, &elementos[indice].a);
   fflush(stdout);
-  while (condicion == -1)
+  while (*p_sharedMemory == -1)
   {
     nd = 0;
     for (k=-1; k<=1; k++)		/* provar direccio actual i dir. veines */
@@ -79,8 +93,8 @@ int main(int n_args, char *ll_args[])
       seg.a = win_quincar(seg.f,seg.c);	/* calcular caracter seguent posicio */
       win_escricar(elementos[indice].f,elementos[indice].c,elementos[indice].a,NO_INV);	/* esborra posicio anterior */
       elementos[indice].f = seg.f; elementos[indice].c = seg.c; elementos[indice].a = seg.a;	/* actualitza posicio */
-      win_escricar(elementos[indice].f,elementos[indice].c, (char)('0'+indice),NO_INV);		/* redibuixa fantasma */
-      if (elementos[indice].a == '0') condicion = 1;		/* ha capturat menjacocos */
+      win_escricar(elementos[indice].f,elementos[indice].c, (char)('1'),NO_INV);		/* redibuixa fantasma */
+      if (elementos[indice].a == '0') *p_sharedMemory = 1;		/* ha capturat menjacocos */
       
     }
     win_retard(retard);
