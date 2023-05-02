@@ -133,8 +133,6 @@ LA SIGUIENTE VARIABLE NOS SERVIRA PARA DEFINIR SI SE ACABO EL JUEGO O NO Y PUEDE
 */
 /*Prueba*/
 int condicion = -1;
-
-
 /* funcio per realitzar la carrega dels parametres de joc emmagatzemats */
 /* dins d'un fitxer de text, el nom del qual es passa per referencia a  */
 /* 'nom_fit'; si es detecta algun problema, la funcio avorta l'execucio */
