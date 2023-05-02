@@ -62,7 +62,9 @@
 /*****************************************************************************/
 
 
-
+/*
+hola
+*/
 #include <stdio.h>		/* incloure definicions de funcions estandard */
 #include <stdlib.h>		/* per exit() */
 #include <unistd.h>		/* per getpid() */
