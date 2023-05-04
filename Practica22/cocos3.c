@@ -331,7 +331,7 @@ void *mou_menjacocos(void *n)
       {
 	      cocos--;
 
-	      sprintf(strin,"Cocos: %d", cocos); win_escristr(strin);
+	      sprintf(strin,"Cocosno s: %d", cocos); win_escristr(strin);
 	      if (cocos == 0) condicion = 0;
 
       }
@@ -374,7 +374,6 @@ int main(int n_args, const char *ll_args[])
 
   if (n_args == 3) retard = atoi(ll_args[2]);
   else retard = 100;
-
   rc = win_ini(&n_fil1,&n_col,'+',INVERS);	/* intenta crear taulell */
   if (rc == 0)		/* si aconsegueix accedir a l'entorn CURSES */
   {
@@ -432,7 +431,7 @@ int main(int n_args, const char *ll_args[])
 }
 else
 {	
-  fprintf(stderr,"Error: no s'ha pogut crear el taulell:\n");
+  fprintf(stderr,"Error: no s'ha pogut crear el taulell:\n %d | %d", n_fil1, n_col);
 	switch (rc)
 	{ 
     case -1: fprintf(stderr,"camp de joc ja creat!\n");
