@@ -363,7 +363,7 @@ int main(int n_args, const char *ll_args[])
   int i = 0; 
   srand(getpid());		/* inicialitza numeros aleatoris */
   char object_str[100];
-  char idSM_str[6];
+  char idSM_str[10];
   char a1[20], a2[20], a3[20];
   void *p_win;
   int id_win;
@@ -409,6 +409,7 @@ int main(int n_args, const char *ll_args[])
 
    printf("Hay %d elementos[indice]\n", totalElem);
    sprintf(idSM_str, "%i", id_sharedMemory);
+   fprintf(stderr, "memoria %s",idSM_str );
    i=0;
    while(i<totalElem)
    {
@@ -433,6 +434,7 @@ int main(int n_args, const char *ll_args[])
         execlp("./Fantasmas3", "Fantasmas3", object_str, ll_args[2], idSM_str, a1, a2, a3, (char *)0);
         fprintf(stderr,"error: no puc executar el process fill \'mp_car\'\n");
         elim_mem(id_sharedMemory);
+        elim_mem(id_win);
         exit(0);
       }
     }
@@ -459,13 +461,13 @@ int main(int n_args, const char *ll_args[])
 
   if (*p_sharedMemory == 0)
   {
-    printf("EL JUGADOR GANO");
+    printf("EL JUGADOR GANO\n");
   }else if (*p_sharedMemory == 1)
   {
-    printf("VAYA LOS FANTASMAS GANARON");
+    printf("VAYA LOS FANTASMAS GANARON\n");
   }else if (*p_sharedMemory == 2)
   {
-    printf("EL JUGADOR DETUVO EL JUEGO");
+    printf("EL JUGADOR DETUVO EL JUEGO\n");
   }
 }
 else

@@ -43,6 +43,7 @@ int main(int n_args, char *ll_args[])
   SE CONECTA A LA MEMORIA COMPARTIDA Y COMPRUEBA SI ES CORRECTA
   */
   id_sharedMemory = atoi(ll_args[3]);
+  fprintf(stderr, "memoria %d ",id_sharedMemory );
   p_sharedMemory = map_mem(id_sharedMemory);	/* obtenir adres. de mem. compartida */
   if (p_sharedMemory == (int*) -1)
   {   fprintf(stderr,"proces (%d): error en identificador de memoria\n",(int)getpid());
@@ -113,5 +114,7 @@ int main(int n_args, char *ll_args[])
     }
     win_retard(retard);
   }
+  elim_mem(id_sharedMemory);
+  elim_mem(id_win);
   exit(0);
 }
