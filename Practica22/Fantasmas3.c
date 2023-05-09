@@ -8,7 +8,6 @@ Proceso de los fantasmas
 #include <unistd.h>		/* per getpid() */
 #include "winsuport2.h"		/* incloure definicions de funcions propies */
 #include <stdbool.h>
-#include <pthread.h>
 #include <stdint.h>		/* intptr_t per màquines de 64 bits */
 #include "memoria.h"
 /*
@@ -35,10 +34,9 @@ int main(int n_args, char *ll_args[])
 {
   objecte elementos;
   objecte seg;
-  int k, vk, nd, vd[3];
+  int k, vk, nd, vd[3], id_win;
   int *p_sharedMemory, id_sharedMemory;
   void *p_win;
-  int id_win;
   int retard = atoi(ll_args[2]);
 
   /*
@@ -51,11 +49,10 @@ int main(int n_args, char *ll_args[])
 	exit(0);
   }
   //mapa
-  int rc = atoi(ll_args[4]);
   int n_fill = atoi(ll_args[5]);
   int n_col = atoi(ll_args[6]);
   //
-  id_win = ini_mem(rc);	/* crear zona mem. compartida */
+  id_win = atoi(ll_args[4]);
   p_win = map_mem(id_win);	/* obtenir adres. de mem. compartida */
 
   if (p_win  == (int*) -1)

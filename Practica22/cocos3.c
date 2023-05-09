@@ -74,6 +74,7 @@ Inicia pero no arranca
 #include <sys/types.h>
 #include <sys/wait.h>
 #include "memoria.h"
+#include <pthread.h>
 
 
 #define MIN_FIL 7		/* definir limits de variables globals */
@@ -116,6 +117,8 @@ objecte elementos[MAX_ELEMENTOS];
 AHORA VAMOS A DEFINIR LOS THREADS AL IGUAL QUE LOS ELEMENTOS
 */
 pid_t tpid[MAX_ELEMENTOS];		/* taula d'identificadors dels processos fill */
+
+pthread_t threads[1];
 
 /*
 A CONTINUACION VAMOS A DEFINIR UNA VARIABLE GLOBAL QUE NOS SERVIRA PARA LO SIGUIENTE:
@@ -264,9 +267,9 @@ void inicialitza_joc(void)
 	      for (i=0; i<n_fil1-1; i++)
 	        for (j=0; j<n_col; j++)
 	          if (win_quincar(i,j)=='.') cocos++;
-              /*
+              
               win_escricar(elementos[0].f,elementos[0].c,'0',NO_INV); 
-              */
+              
               
               for(int z=1; z<totalElem;z++)
               {
@@ -307,7 +310,9 @@ void *mou_menjacocos(void *n)
 {
   char strin[99];
   objecte seg;
+  char cocos_left[50];
   int tec;
+  //fprintf(stderr, "Comecocos empezo");
   while (*p_sharedMemory == -1)
   {
     //fprintf(stderr,"Antes de escoger tecla\n");
@@ -319,7 +324,7 @@ void *mou_menjacocos(void *n)
       case TEC_ESQUER:  elementos[0].d = 1; break;
       case TEC_AVALL:	  elementos[0].d = 2; break;
       case TEC_DRETA:	  elementos[0].d = 3; break;
-      case TEC_RETURN:  condicion = 2; break;
+      case TEC_RETURN:  *p_sharedMemory = 2; break;
     }
 
     seg.f = elementos[0].f + df[elementos[0].d];	/* calcular seguent posicio */
@@ -341,6 +346,8 @@ void *mou_menjacocos(void *n)
       }
     }
     win_retard(retard);
+    sprintf(cocos_left,"Cocos: %d",cocos);
+    win_escristr(cocos_left);
     win_update();
   }
 
@@ -356,7 +363,7 @@ int main(int n_args, const char *ll_args[])
   int i = 0; 
   srand(getpid());		/* inicialitza numeros aleatoris */
   char object_str[100];
-  char idSM_str[4];
+  char idSM_str[6];
   char a1[20], a2[20], a3[20];
   void *p_win;
   int id_win;
@@ -385,49 +392,64 @@ int main(int n_args, const char *ll_args[])
   rc = win_ini(&n_fil1,&n_col,'+',INVERS);	/* intenta crear taulell */
   if (rc >= 0)		/* si aconsegueix accedir a l'entorn CURSES */
   {
+
+    /*
+    INICIAR MEMORIA COMPARTIDA DE CAMPO 
+    */
     id_win = ini_mem(rc);	/* crear zona mem. compartida */
     p_win = map_mem(id_win);	/* obtenir adres. de mem. compartida */
 
     win_set(p_win,n_fil1,n_col);		/* crea acces a finestra oberta */
 
     inicialitza_joc();
+    win_update();
     /*
     JUSTO CUANDO SE INICIA EL JUEGO Y LOS elementos[indice] ESTAN SOBRE EL TABLERO, SE INICIAN LOS THREADS PARA QUE COMIENCEN A EJECUTARSE 
     */
 
    printf("Hay %d elementos[indice]\n", totalElem);
    sprintf(idSM_str, "%i", id_sharedMemory);
-   i=1;
+   i=0;
    while(i<totalElem)
    {
-    tpid[i] = fork();		/* crea un nou proces */
-    if (tpid[i] == (pid_t) 0)		/* branca del fill */
+    if (i==0)
     {
-      sprintf(object_str, "%d,%d,%d,%.2f,%c", elementos[i].f, elementos[i].c, elementos[i].d, elementos[i].r, elementos[i].a);
-      sprintf(a1,"%i",id_win);
-      sprintf(a2,"%i",n_fil1);
-      sprintf(a3,"%i",n_col);
-      /*
-      PARAMETROS A ENVIAR
-      PARAM0 --> Nombre del programa
-      PARAM1 --> Objecto fantasma
-      PARAM2 --> Retardo
-      PARAM3 --> Id de la memoria comaprtida
-      */
-      execlp("./Fantasmas3", "Fantasmas3", object_str, ll_args[2], idSM_str, a1, a2, a3, (char *)0);
-      fprintf(stderr,"error: no puc executar el process fill \'mp_car\'\n");
-      elim_mem(id_sharedMemory);
-      exit(0);
+      pthread_create(&threads[0],NULL,mou_menjacocos,(void *) NULL);
+    }else{
+      tpid[i] = fork();		/* crea un nou proces */
+      if (tpid[i] == (pid_t) 0)		/* branca del fill */
+      {
+        sprintf(object_str, "%d,%d,%d,%.2f,%c", elementos[i].f, elementos[i].c, elementos[i].d, elementos[i].r, elementos[i].a);
+        sprintf(a1,"%i",id_win);
+        sprintf(a2,"%i",n_fil1);
+        sprintf(a3,"%i",n_col);
+        /*
+        PARAMETROS A ENVIAR
+        PARAM0 --> Nombre del programa
+        PARAM1 --> Objecto fantasma
+        PARAM2 --> Retardo
+        PARAM3 --> Id de la memoria comaprtida
+        */
+        execlp("./Fantasmas3", "Fantasmas3", object_str, ll_args[2], idSM_str, a1, a2, a3, (char *)0);
+        fprintf(stderr,"error: no puc executar el process fill \'mp_car\'\n");
+        elim_mem(id_sharedMemory);
+        exit(0);
+      }
     }
     i++;
    }
   /*
    UNA VEZ CREADOS SE REALIZA EL JOIN PARA QUE ESPERAR A QUE ACABEN 
    */
-  i=1;
+  i=0;
   while(i<totalElem)
   {
-    waitpid(tpid[i],NULL,0);	/* espera finalitzacio d'un fill */
+    if (i==0)
+    {
+      pthread_join(threads[i], (void *) NULL);
+    }else{
+       waitpid(tpid[i],NULL,0);	/* espera finalitzacio d'un fill */
+    }
     i++;
   }
 
@@ -463,7 +485,7 @@ else
 	}
 	exit(6);
   }
-  
+
   elim_mem(id_sharedMemory);
   return(0);
 }
