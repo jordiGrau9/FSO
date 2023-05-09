@@ -220,6 +220,7 @@ void carrega_parametres(const char *nom_fit)
   totalElem = i;
  
   printf("Elementos totales en juego %d | %d\n\n", totalElem, i);
+  printf("Valores de filas y columnas %d | %d\n\n", n_fil1, n_col);
   printf("Joc del MenjaCocos\n\tTecles: \'%c\', \'%c\', \'%c\', \'%c\', RETURN-> sortir\n",
 		TEC_AMUNT, TEC_AVALL, TEC_DRETA, TEC_ESQUER);
   printf("prem una tecla per continuar:\n");
@@ -353,6 +354,9 @@ int main(int n_args, const char *ll_args[])
   int *p_sharedMemory, id_sharedMemory;
   char object_str[100];
   char idSM_str[4];
+  void *p_win;
+ int id_win;
+
   if ((n_args != 2) && (n_args !=3))
   {	
     fprintf(stderr,"Comanda: cocos0 fit_param [retard] [numero fantasmas]\n");
@@ -375,13 +379,20 @@ int main(int n_args, const char *ll_args[])
   if (n_args == 3) retard = atoi(ll_args[2]);
   else retard = 100;
   rc = win_ini(&n_fil1,&n_col,'+',INVERS);	/* intenta crear taulell */
-  if (rc == 0)		/* si aconsegueix accedir a l'entorn CURSES */
+  fprintf(stderr,"%d", rc);
+  if (rc >= 0)		/* si aconsegueix accedir a l'entorn CURSES */
   {
+    id_win = ini_mem(rc);	/* crear zona mem. compartida */
+    p_win = map_mem(id_win);	/* obtenir adres. de mem. compartida */
+
+    win_set(p_win,n_fil1,n_col);		/* crea acces a finestra oberta */
+
     inicialitza_joc();
 
     /*
     JUSTO CUANDO SE INICIA EL JUEGO Y LOS elementos[indice] ESTAN SOBRE EL TABLERO, SE INICIAN LOS THREADS PARA QUE COMIENCEN A EJECUTARSE 
     */
+
    printf("Hay %d elementos[indice]\n", totalElem);
    sprintf(idSM_str, "%i", id_sharedMemory);
    i=1;
@@ -400,6 +411,7 @@ int main(int n_args, const char *ll_args[])
       */
       execlp("./Fantasmas3", "Fantasmas3", object_str, ll_args[2], idSM_str, (char *)0);
       fprintf(stderr,"error: no puc executar el process fill \'mp_car\'\n");
+      elim_mem(id_sharedMemory);
       exit(0);
     }
     i++;
@@ -431,7 +443,8 @@ int main(int n_args, const char *ll_args[])
 }
 else
 {	
-  fprintf(stderr,"Error: no s'ha pogut crear el taulell:\n %d | %d", n_fil1, n_col);
+  elim_mem(id_sharedMemory);
+  fprintf(stderr,"Error: no s'ha pogut crear el taulell:\n -->");
 	switch (rc)
 	{ 
     case -1: fprintf(stderr,"camp de joc ja creat!\n");
