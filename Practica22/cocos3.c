@@ -63,7 +63,7 @@
 
 
 /*
-hola
+Inicia pero no arranca
 */
 #include <stdio.h>		/* incloure definicions de funcions estandard */
 #include <stdlib.h>		/* per exit() */
