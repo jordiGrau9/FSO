@@ -341,6 +341,7 @@ void *mou_menjacocos(void *n)
       }
     }
     win_retard(retard);
+    win_update();
   }
 
   return ((void *) NULL);
@@ -390,7 +391,6 @@ int main(int n_args, const char *ll_args[])
     win_set(p_win,n_fil1,n_col);		/* crea acces a finestra oberta */
 
     inicialitza_joc();
-    win_update();
     /*
     JUSTO CUANDO SE INICIA EL JUEGO Y LOS elementos[indice] ESTAN SOBRE EL TABLERO, SE INICIAN LOS THREADS PARA QUE COMIENCEN A EJECUTARSE 
     */
