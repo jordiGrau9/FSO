@@ -37,17 +37,33 @@ int main(int n_args, char *ll_args[])
   objecte seg;
   int k, vk, nd, vd[3];
   int *p_sharedMemory, id_sharedMemory;
+  void *p_win;
+  int id_win;
   int retard = atoi(ll_args[2]);
 
   /*
   SE CONECTA A LA MEMORIA COMPARTIDA Y COMPRUEBA SI ES CORRECTA
   */
   id_sharedMemory = atoi(ll_args[3]);
-  *p_sharedMemory = map_mem(id_sharedMemory);	/* obtenir adres. de mem. compartida */
+  p_sharedMemory = map_mem(id_sharedMemory);	/* obtenir adres. de mem. compartida */
   if (p_sharedMemory == (int*) -1)
   {   fprintf(stderr,"proces (%d): error en identificador de memoria\n",(int)getpid());
 	exit(0);
   }
+  //mapa
+  int rc = atoi(ll_args[4]);
+  int n_fill = atoi(ll_args[5]);
+  int n_col = atoi(ll_args[6]);
+  //
+  id_win = ini_mem(rc);	/* crear zona mem. compartida */
+  p_win = map_mem(id_win);	/* obtenir adres. de mem. compartida */
+
+  if (p_win  == (int*) -1)
+  {   fprintf(stderr,"proces (%d): error en identificador de memoria\n",(int)getpid());
+	exit(0);
+  }
+
+  win_set(p_win,n_fill,n_col);		/* crea acces a finestra oberta */
   
   /*
   RECUPERAMOS EL OBJETO
@@ -100,5 +116,5 @@ int main(int n_args, char *ll_args[])
     }
     win_retard(retard);
   }
-  return (NULL);
+  exit(0);
 }

@@ -133,6 +133,8 @@ LA SIGUIENTE VARIABLE NOS SERVIRA PARA DEFINIR SI SE ACABO EL JUEGO O NO Y PUEDE
 */
 /*Prueba*/
 int condicion = -1;
+
+int *p_sharedMemory, id_sharedMemory;
 /* funcio per realitzar la carrega dels parametres de joc emmagatzemats */
 /* dins d'un fitxer de text, el nom del qual es passa per referencia a  */
 /* 'nom_fit'; si es detecta algun problema, la funcio avorta l'execucio */
@@ -238,6 +240,7 @@ void inicialitza_joc(void)
   int aux=0;
 
   r = win_carregatauler(tauler,n_fil1-1,n_col,c_req);
+    
   if (r == 0)
   {
   
@@ -305,7 +308,7 @@ void *mou_menjacocos(void *n)
   char strin[99];
   objecte seg;
   int tec;
-  while (condicion == -1)
+  while (*p_sharedMemory == -1)
   {
     //fprintf(stderr,"Antes de escoger tecla\n");
     tec = win_gettec();
@@ -333,7 +336,7 @@ void *mou_menjacocos(void *n)
 	      cocos--;
 
 	      sprintf(strin,"Cocosno s: %d", cocos); win_escristr(strin);
-	      if (cocos == 0) condicion = 0;
+	      if (cocos == 0) *p_sharedMemory = 0;
 
       }
     }
@@ -349,13 +352,13 @@ void *mou_menjacocos(void *n)
 int main(int n_args, const char *ll_args[])
 {
   int rc;		/* variables locals */
-  int i = 0;
+  int i = 0; 
   srand(getpid());		/* inicialitza numeros aleatoris */
-  int *p_sharedMemory, id_sharedMemory;
   char object_str[100];
   char idSM_str[4];
+  char a1[20], a2[20], a3[20];
   void *p_win;
- int id_win;
+  int id_win;
 
   if ((n_args != 2) && (n_args !=3))
   {	
@@ -379,7 +382,6 @@ int main(int n_args, const char *ll_args[])
   if (n_args == 3) retard = atoi(ll_args[2]);
   else retard = 100;
   rc = win_ini(&n_fil1,&n_col,'+',INVERS);	/* intenta crear taulell */
-  fprintf(stderr,"%d", rc);
   if (rc >= 0)		/* si aconsegueix accedir a l'entorn CURSES */
   {
     id_win = ini_mem(rc);	/* crear zona mem. compartida */
@@ -388,7 +390,7 @@ int main(int n_args, const char *ll_args[])
     win_set(p_win,n_fil1,n_col);		/* crea acces a finestra oberta */
 
     inicialitza_joc();
-
+    win_update();
     /*
     JUSTO CUANDO SE INICIA EL JUEGO Y LOS elementos[indice] ESTAN SOBRE EL TABLERO, SE INICIAN LOS THREADS PARA QUE COMIENCEN A EJECUTARSE 
     */
@@ -402,6 +404,9 @@ int main(int n_args, const char *ll_args[])
     if (tpid[i] == (pid_t) 0)		/* branca del fill */
     {
       sprintf(object_str, "%d,%d,%d,%.2f,%c", elementos[i].f, elementos[i].c, elementos[i].d, elementos[i].r, elementos[i].a);
+      sprintf(a1,"%i",id_win);
+      sprintf(a2,"%i",n_fil1);
+      sprintf(a3,"%i",n_col);
       /*
       PARAMETROS A ENVIAR
       PARAM0 --> Nombre del programa
@@ -409,7 +414,7 @@ int main(int n_args, const char *ll_args[])
       PARAM2 --> Retardo
       PARAM3 --> Id de la memoria comaprtida
       */
-      execlp("./Fantasmas3", "Fantasmas3", object_str, ll_args[2], idSM_str, (char *)0);
+      execlp("./Fantasmas3", "Fantasmas3", object_str, ll_args[2], idSM_str, a1, a2, a3, (char *)0);
       fprintf(stderr,"error: no puc executar el process fill \'mp_car\'\n");
       elim_mem(id_sharedMemory);
       exit(0);
@@ -444,7 +449,7 @@ int main(int n_args, const char *ll_args[])
 else
 {	
   elim_mem(id_sharedMemory);
-  fprintf(stderr,"Error: no s'ha pogut crear el taulell:\n -->");
+  elim_mem(id_win);
 	switch (rc)
 	{ 
     case -1: fprintf(stderr,"camp de joc ja creat!\n");
@@ -458,7 +463,7 @@ else
 	}
 	exit(6);
   }
-
+  
   elim_mem(id_sharedMemory);
   return(0);
 }
