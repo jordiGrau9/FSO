@@ -1,6 +1,6 @@
 /*****************************************************************************/
-/*									         Adri cabron                                */
-/*				     cocos0.c				                                 */
+/*									                                            */
+/*				     cocos3.c				                                 */
 /*									                                         */
 /*     Programa inicial d'exemple per a les practiques 2.1 i 2.2 de FSO.     */
 /*     Es tracta del joc del menjacocos: es dibuixa un laberint amb una      */
