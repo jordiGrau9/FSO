@@ -1,5 +1,5 @@
 /*****************************************************************************/
-/*									                                         */
+/*									         Adri cabron                                */
 /*				     cocos0.c				                                 */
 /*									                                         */
 /*     Programa inicial d'exemple per a les practiques 2.1 i 2.2 de FSO.     */
